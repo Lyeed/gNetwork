@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package commands;
+
+service Commands {
+  rpc Add (Request) returns (Reply) {}
+  rpc Sleep (Request) returns (Reply) {}
+}
+
+message Data {
+  string Name = 1;
+  int64 Value = 2;
+}
+
+message Request {
+  repeated int64 Value = 1;
+}
+
+message Reply {
+  repeated Data Msg = 1;
+}

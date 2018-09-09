@@ -1,0 +1,34 @@
+{
+	"commands": [{
+			"command": "Add",
+			"args": [{
+					"name": "op1",
+					"value": 1
+				},
+				{
+					"name": "op2",
+					"value": 1
+				}
+			]
+		},
+		{
+			"command": "Add",
+			"args": [{
+					"name": "op1",
+					"value": 42
+				},
+				{
+					"name": "op2",
+					"value": 58
+				}
+			]
+		},
+		{
+			"command": "Sleep",
+			"args": [{
+				"name": "duration",
+				"value": 10000
+			}]
+		}
+	]
+}
