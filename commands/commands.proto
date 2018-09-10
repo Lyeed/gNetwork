@@ -3,8 +3,8 @@ syntax = "proto3";
 package commands;
 
 service Commands {
-  rpc Add (Request) returns (Reply) {}
-  rpc Sleep (Request) returns (Reply) {}
+  rpc Add (Message) returns (Message) {}
+  rpc Sleep (Message) returns (Message) {}
 }
 
 message Data {
@@ -12,10 +12,6 @@ message Data {
   int64 Value = 2;
 }
 
-message Request {
-repeated Data Msg = 1;
-}
-
-message Reply {
+message Message {
   repeated Data Msg = 1;
 }

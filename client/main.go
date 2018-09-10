@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const address = "http://localhost:8080/"
+const address = "http://localhost:8080/command"
 
 type Arg struct {
 	Name  string `json:"name"`
@@ -36,28 +36,34 @@ func OpenAndUnmarshallJSON(s string) *Commands {
 	return cmds
 }
 
-func PostCommand(c Command) *http.Response {
+func PostCommand(c Command) (*http.Response, error) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(c)
-	res, err := http.Post(address, "application/json; charset=utf-8", b)
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-	return res
+	return http.Post(address, "application/json; charset=utf-8", b)
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatalf("1st parameter must be a json file")
-	}
+	if len(os.Args) >= 2 {
+		cmds := OpenAndUnmarshallJSON(os.Args[1])
+		for i := 0; i < len(cmds.Commands); i++ {
+			r, err := PostCommand(cmds.Commands[i])
+			// the variable r contains the command's response
+			// the json is contained in the response's body accessible via r.Body
 
-	cmds := OpenAndUnmarshallJSON(os.Args[1])
-	for i := 0; i < len(cmds.Commands); i++ {
-		fmt.Printf("\n\n%+v\n", cmds.Commands[i])
-		r := PostCommand(cmds.Commands[i])
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-		newStr := buf.String()
-		fmt.Printf("%s\n", newStr)
+			// Example using command's response
+			fmt.Printf("\n\nCommand: %+v\n", cmds.Commands[i]) // printing the initial structure and its content
+			if err == nil {
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(r.Body)
+				newStr := buf.String()
+				fmt.Printf("Response type: %s\n", r.Header.Get("Content-type")) // printing content type
+				fmt.Printf("Response content: %s\n", newStr)                    // printing as string the json returned
+				r.Body.Close()
+			} else {
+				fmt.Printf("%s\n", err.Error()) // printing Post error
+			}
+		}
+	} else {
+		fmt.Printf("1st parameter must be a json file")
 	}
 }

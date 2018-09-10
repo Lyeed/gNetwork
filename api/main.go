@@ -7,59 +7,49 @@ import (
 	"log"
 	"net/http"
 
-	cmds "github.com/Lyeed/gNetwork/commands"
+	"github.com/Lyeed/gNetwork/commands"
 	"google.golang.org/grpc"
 )
 
-type Argument struct {
-	Name  string
-	Value int
-}
-
-type Result struct {
+type Data struct {
 	Name  string
 	Value int64
 }
 
 type Message struct {
 	Command string
-	Args    []Argument
-}
-
-type Respond struct {
-	Command string
-	Args    []Argument
-	Results []Result
+	Args    []Data
+	Results []Data
 }
 
 const address = "localhost:50051"
 
-type command func(cmds.CommandsClient, context.Context, *cmds.Request, ...grpc.CallOption) (*cmds.Reply, error)
+type command func(commands.CommandsClient, context.Context, *commands.Message, ...grpc.CallOption) (*commands.Message, error)
 
-func Dial(m Message) Respond {
+func Dial(m Message) Message {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("dial error: %v", err)
 	}
 	defer conn.Close()
 
-	c := cmds.NewCommandsClient(conn)
+	c := commands.NewCommandsClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	reply, error := CallCommand(c, ctx, m)
 	if error != nil {
-		return StructureRespond(m, &cmds.Reply{Msg: [](*cmds.Data){&cmds.Data{Name: "unknown command", Value: -1}}})
+		return NewRespondMessage(m, &commands.Message{Msg: [](*commands.Data){&commands.Data{Name: "unknown command", Value: -1}}})
 	}
-	return StructureRespond(m, reply)
+	return NewRespondMessage(m, reply)
 }
 
-func CallCommand(c cmds.CommandsClient, ctx context.Context, m Message) (*cmds.Reply, error) {
+func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*commands.Message, error) {
 	cmdsMap := map[string]command{
-		"Add":   cmds.CommandsClient.Add,
-		"Sleep": cmds.CommandsClient.Sleep,
+		"Add":   commands.CommandsClient.Add,
+		"Sleep": commands.CommandsClient.Sleep,
 	}
-	req := NewRequest(m)
+	req := NewCommandMessage(m)
 	cmd, found := cmdsMap[m.Command]
 	if !found {
 		return nil, errors.New("commands: unknown command")
@@ -67,12 +57,12 @@ func CallCommand(c cmds.CommandsClient, ctx context.Context, m Message) (*cmds.R
 	return cmd(c, ctx, &req)
 }
 
-func StructureRespond(m Message, reply *cmds.Reply) Respond {
-	var respond Respond
+func NewRespondMessage(m Message, reply *commands.Message) Message {
+	var respond Message
 	respond.Command = m.Command
 	respond.Args = m.Args
 	for _, element := range reply.Msg {
-		var n Result
+		var n Data
 		n.Name = element.Name
 		n.Value = element.Value
 		respond.Results = append(respond.Results, n)
@@ -80,12 +70,12 @@ func StructureRespond(m Message, reply *cmds.Reply) Respond {
 	return respond
 }
 
-func NewRequest(m Message) cmds.Request {
-	var r cmds.Request
+func NewCommandMessage(m Message) commands.Message {
+	var r commands.Message
 	for _, element := range m.Args {
-		var d cmds.Data
+		var d commands.Data
 		d.Name = element.Name
-		d.Value = int64(element.Value)
+		d.Value = element.Value
 		r.Msg = append(r.Msg, &d)
 	}
 	return r
@@ -93,14 +83,14 @@ func NewRequest(m Message) cmds.Request {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
-		http.Error(w, "Request body needed", 400)
+		http.Error(w, "Request body needed", http.StatusBadRequest)
 		return
 	}
 
 	var m Message
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -116,6 +106,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/command", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

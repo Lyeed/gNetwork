@@ -35,7 +35,7 @@ func (m *Data) Reset()         { *m = Data{} }
 func (m *Data) String() string { return proto.CompactTextString(m) }
 func (*Data) ProtoMessage()    {}
 func (*Data) Descriptor() ([]byte, []int) {
-	return fileDescriptor_commands_aba0ac2471733f9d, []int{0}
+	return fileDescriptor_commands_dd7520f745c0c40d, []int{0}
 }
 func (m *Data) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Data.Unmarshal(m, b)
@@ -69,76 +69,38 @@ func (m *Data) GetValue() int64 {
 	return 0
 }
 
-type Request struct {
+type Message struct {
 	Msg                  []*Data  `protobuf:"bytes,1,rep,name=Msg,proto3" json:"Msg,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Request) Reset()         { *m = Request{} }
-func (m *Request) String() string { return proto.CompactTextString(m) }
-func (*Request) ProtoMessage()    {}
-func (*Request) Descriptor() ([]byte, []int) {
-	return fileDescriptor_commands_aba0ac2471733f9d, []int{1}
+func (m *Message) Reset()         { *m = Message{} }
+func (m *Message) String() string { return proto.CompactTextString(m) }
+func (*Message) ProtoMessage()    {}
+func (*Message) Descriptor() ([]byte, []int) {
+	return fileDescriptor_commands_dd7520f745c0c40d, []int{1}
 }
-func (m *Request) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Request.Unmarshal(m, b)
+func (m *Message) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Message.Unmarshal(m, b)
 }
-func (m *Request) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Request.Marshal(b, m, deterministic)
+func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Message.Marshal(b, m, deterministic)
 }
-func (dst *Request) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Request.Merge(dst, src)
+func (dst *Message) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Message.Merge(dst, src)
 }
-func (m *Request) XXX_Size() int {
-	return xxx_messageInfo_Request.Size(m)
+func (m *Message) XXX_Size() int {
+	return xxx_messageInfo_Message.Size(m)
 }
-func (m *Request) XXX_DiscardUnknown() {
-	xxx_messageInfo_Request.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Request proto.InternalMessageInfo
-
-func (m *Request) GetMsg() []*Data {
-	if m != nil {
-		return m.Msg
-	}
-	return nil
+func (m *Message) XXX_DiscardUnknown() {
+	xxx_messageInfo_Message.DiscardUnknown(m)
 }
 
-type Reply struct {
-	Msg                  []*Data  `protobuf:"bytes,1,rep,name=Msg,proto3" json:"Msg,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
+var xxx_messageInfo_Message proto.InternalMessageInfo
 
-func (m *Reply) Reset()         { *m = Reply{} }
-func (m *Reply) String() string { return proto.CompactTextString(m) }
-func (*Reply) ProtoMessage()    {}
-func (*Reply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_commands_aba0ac2471733f9d, []int{2}
-}
-func (m *Reply) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Reply.Unmarshal(m, b)
-}
-func (m *Reply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Reply.Marshal(b, m, deterministic)
-}
-func (dst *Reply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Reply.Merge(dst, src)
-}
-func (m *Reply) XXX_Size() int {
-	return xxx_messageInfo_Reply.Size(m)
-}
-func (m *Reply) XXX_DiscardUnknown() {
-	xxx_messageInfo_Reply.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Reply proto.InternalMessageInfo
-
-func (m *Reply) GetMsg() []*Data {
+func (m *Message) GetMsg() []*Data {
 	if m != nil {
 		return m.Msg
 	}
@@ -147,8 +109,7 @@ func (m *Reply) GetMsg() []*Data {
 
 func init() {
 	proto.RegisterType((*Data)(nil), "commands.Data")
-	proto.RegisterType((*Request)(nil), "commands.Request")
-	proto.RegisterType((*Reply)(nil), "commands.Reply")
+	proto.RegisterType((*Message)(nil), "commands.Message")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -163,8 +124,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CommandsClient interface {
-	Add(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Reply, error)
-	Sleep(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Reply, error)
+	Add(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	Sleep(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
 type commandsClient struct {
@@ -175,8 +136,8 @@ func NewCommandsClient(cc *grpc.ClientConn) CommandsClient {
 	return &commandsClient{cc}
 }
 
-func (c *commandsClient) Add(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Reply, error) {
-	out := new(Reply)
+func (c *commandsClient) Add(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
 	err := c.cc.Invoke(ctx, "/commands.Commands/Add", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -184,8 +145,8 @@ func (c *commandsClient) Add(ctx context.Context, in *Request, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *commandsClient) Sleep(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Reply, error) {
-	out := new(Reply)
+func (c *commandsClient) Sleep(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
 	err := c.cc.Invoke(ctx, "/commands.Commands/Sleep", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -195,8 +156,8 @@ func (c *commandsClient) Sleep(ctx context.Context, in *Request, opts ...grpc.Ca
 
 // CommandsServer is the server API for Commands service.
 type CommandsServer interface {
-	Add(context.Context, *Request) (*Reply, error)
-	Sleep(context.Context, *Request) (*Reply, error)
+	Add(context.Context, *Message) (*Message, error)
+	Sleep(context.Context, *Message) (*Message, error)
 }
 
 func RegisterCommandsServer(s *grpc.Server, srv CommandsServer) {
@@ -204,7 +165,7 @@ func RegisterCommandsServer(s *grpc.Server, srv CommandsServer) {
 }
 
 func _Commands_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -216,13 +177,13 @@ func _Commands_Add_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/commands.Commands/Add",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommandsServer).Add(ctx, req.(*Request))
+		return srv.(CommandsServer).Add(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Commands_Sleep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -234,7 +195,7 @@ func _Commands_Sleep_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/commands.Commands/Sleep",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CommandsServer).Sleep(ctx, req.(*Request))
+		return srv.(CommandsServer).Sleep(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -256,20 +217,19 @@ var _Commands_serviceDesc = grpc.ServiceDesc{
 	Metadata: "commands.proto",
 }
 
-func init() { proto.RegisterFile("commands.proto", fileDescriptor_commands_aba0ac2471733f9d) }
+func init() { proto.RegisterFile("commands.proto", fileDescriptor_commands_dd7520f745c0c40d) }
 
-var fileDescriptor_commands_aba0ac2471733f9d = []byte{
-	// 177 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_commands_dd7520f745c0c40d = []byte{
+	// 162 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4b, 0xce, 0xcf, 0xcd,
 	0x4d, 0xcc, 0x4b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x80, 0xf1, 0x95, 0x0c,
 	0xb8, 0x58, 0x5c, 0x12, 0x4b, 0x12, 0x85, 0x84, 0xb8, 0x58, 0xfc, 0x12, 0x73, 0x53, 0x25, 0x18,
 	0x15, 0x18, 0x35, 0x38, 0x83, 0xc0, 0x6c, 0x21, 0x11, 0x2e, 0xd6, 0xb0, 0xc4, 0x9c, 0xd2, 0x54,
-	0x09, 0x26, 0x05, 0x46, 0x0d, 0xe6, 0x20, 0x08, 0x47, 0x49, 0x9b, 0x8b, 0x3d, 0x28, 0xb5, 0xb0,
-	0x34, 0xb5, 0xb8, 0x44, 0x48, 0x81, 0x8b, 0xd9, 0xb7, 0x38, 0x5d, 0x82, 0x51, 0x81, 0x59, 0x83,
-	0xdb, 0x88, 0x4f, 0x0f, 0x6e, 0x09, 0xc8, 0xc4, 0x20, 0x90, 0x94, 0x92, 0x26, 0x17, 0x6b, 0x50,
-	0x6a, 0x41, 0x4e, 0x25, 0x61, 0xa5, 0x46, 0x69, 0x5c, 0x1c, 0xce, 0x50, 0x51, 0x21, 0x6d, 0x2e,
-	0x66, 0xc7, 0x94, 0x14, 0x21, 0x41, 0x84, 0x3a, 0xa8, 0x95, 0x52, 0xfc, 0xc8, 0x42, 0x05, 0x39,
-	0x95, 0x4a, 0x0c, 0x42, 0xba, 0x5c, 0xac, 0xc1, 0x39, 0xa9, 0xa9, 0x05, 0xc4, 0x29, 0x4f, 0x62,
-	0x03, 0x07, 0x81, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xc1, 0x17, 0x2a, 0x79, 0x14, 0x01, 0x00,
-	0x00,
+	0x09, 0x26, 0x05, 0x46, 0x0d, 0xe6, 0x20, 0x08, 0x47, 0x49, 0x9b, 0x8b, 0xdd, 0x37, 0xb5, 0xb8,
+	0x38, 0x31, 0x3d, 0x55, 0x48, 0x81, 0x8b, 0xd9, 0xb7, 0x38, 0x5d, 0x82, 0x51, 0x81, 0x59, 0x83,
+	0xdb, 0x88, 0x4f, 0x0f, 0x6e, 0x09, 0xc8, 0xc4, 0x20, 0x90, 0x94, 0x51, 0x16, 0x17, 0x87, 0x33,
+	0x54, 0x54, 0x48, 0x97, 0x8b, 0xd9, 0x31, 0x25, 0x45, 0x48, 0x10, 0xa1, 0x0e, 0x6a, 0x8e, 0x14,
+	0xa6, 0x90, 0x12, 0x83, 0x90, 0x3e, 0x17, 0x6b, 0x70, 0x4e, 0x6a, 0x6a, 0x01, 0xb1, 0x1a, 0x92,
+	0xd8, 0xc0, 0x7e, 0x33, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x10, 0x7b, 0x5d, 0x1b, 0xed, 0x00,
+	0x00, 0x00,
 }
