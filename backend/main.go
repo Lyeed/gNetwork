@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"net"
 	"strings"
@@ -34,7 +33,7 @@ func (s *serverCommands) Add(ctx context.Context, in *commands.Message) (*comman
 	ope1 := getParam(in.Msg, "op1")
 	ope2 := getParam(in.Msg, "op2")
 	if ope1 == nil || ope2 == nil {
-		return NewReply("wrong syntax", -1), errors.New("command: wrong syntax")
+		return NewReply("wrong_syntax", -1), nil
 	}
 	return NewReply("sum", ope1.Value+ope2.Value), nil
 }
@@ -42,11 +41,15 @@ func (s *serverCommands) Add(ctx context.Context, in *commands.Message) (*comman
 func (s *serverCommands) Sleep(ctx context.Context, in *commands.Message) (*commands.Message, error) {
 	dur := getParam(in.Msg, "duration")
 	if dur == nil {
-		return NewReply("wrong syntax", -1), errors.New("command: wrong syntax")
+		return NewReply("wrong_syntax", -1), nil
 	}
 	start := time.Now()
 	time.Sleep(time.Duration(dur.Value) * time.Millisecond)
 	return NewReply("actual_duration", int64(time.Since(start)/time.Millisecond)), nil
+}
+
+func (s *serverCommands) Error(ctx context.Context, in *commands.Message) (*commands.Message, error) {
+	return NewReply("unknown_command", -1), nil
 }
 
 func main() {

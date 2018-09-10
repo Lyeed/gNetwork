@@ -5,6 +5,7 @@ package commands;
 service Commands {
   rpc Add (Message) returns (Message) {}
   rpc Sleep (Message) returns (Message) {}
+  rpc Error (Message) returns (Message) {}
 }
 
 message Data {

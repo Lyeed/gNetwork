@@ -35,7 +35,7 @@ func (m *Data) Reset()         { *m = Data{} }
 func (m *Data) String() string { return proto.CompactTextString(m) }
 func (*Data) ProtoMessage()    {}
 func (*Data) Descriptor() ([]byte, []int) {
-	return fileDescriptor_commands_dd7520f745c0c40d, []int{0}
+	return fileDescriptor_commands_c4d4c95faf805a3c, []int{0}
 }
 func (m *Data) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Data.Unmarshal(m, b)
@@ -80,7 +80,7 @@ func (m *Message) Reset()         { *m = Message{} }
 func (m *Message) String() string { return proto.CompactTextString(m) }
 func (*Message) ProtoMessage()    {}
 func (*Message) Descriptor() ([]byte, []int) {
-	return fileDescriptor_commands_dd7520f745c0c40d, []int{1}
+	return fileDescriptor_commands_c4d4c95faf805a3c, []int{1}
 }
 func (m *Message) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Message.Unmarshal(m, b)
@@ -126,6 +126,7 @@ const _ = grpc.SupportPackageIsVersion4
 type CommandsClient interface {
 	Add(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	Sleep(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	Error(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
 type commandsClient struct {
@@ -154,10 +155,20 @@ func (c *commandsClient) Sleep(ctx context.Context, in *Message, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *commandsClient) Error(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/commands.Commands/Error", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommandsServer is the server API for Commands service.
 type CommandsServer interface {
 	Add(context.Context, *Message) (*Message, error)
 	Sleep(context.Context, *Message) (*Message, error)
+	Error(context.Context, *Message) (*Message, error)
 }
 
 func RegisterCommandsServer(s *grpc.Server, srv CommandsServer) {
@@ -200,6 +211,24 @@ func _Commands_Sleep_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Commands_Error_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommandsServer).Error(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/commands.Commands/Error",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommandsServer).Error(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Commands_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "commands.Commands",
 	HandlerType: (*CommandsServer)(nil),
@@ -212,24 +241,28 @@ var _Commands_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Sleep",
 			Handler:    _Commands_Sleep_Handler,
 		},
+		{
+			MethodName: "Error",
+			Handler:    _Commands_Error_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "commands.proto",
 }
 
-func init() { proto.RegisterFile("commands.proto", fileDescriptor_commands_dd7520f745c0c40d) }
+func init() { proto.RegisterFile("commands.proto", fileDescriptor_commands_c4d4c95faf805a3c) }
 
-var fileDescriptor_commands_dd7520f745c0c40d = []byte{
-	// 162 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_commands_c4d4c95faf805a3c = []byte{
+	// 171 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4b, 0xce, 0xcf, 0xcd,
 	0x4d, 0xcc, 0x4b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x80, 0xf1, 0x95, 0x0c,
 	0xb8, 0x58, 0x5c, 0x12, 0x4b, 0x12, 0x85, 0x84, 0xb8, 0x58, 0xfc, 0x12, 0x73, 0x53, 0x25, 0x18,
 	0x15, 0x18, 0x35, 0x38, 0x83, 0xc0, 0x6c, 0x21, 0x11, 0x2e, 0xd6, 0xb0, 0xc4, 0x9c, 0xd2, 0x54,
 	0x09, 0x26, 0x05, 0x46, 0x0d, 0xe6, 0x20, 0x08, 0x47, 0x49, 0x9b, 0x8b, 0xdd, 0x37, 0xb5, 0xb8,
 	0x38, 0x31, 0x3d, 0x55, 0x48, 0x81, 0x8b, 0xd9, 0xb7, 0x38, 0x5d, 0x82, 0x51, 0x81, 0x59, 0x83,
-	0xdb, 0x88, 0x4f, 0x0f, 0x6e, 0x09, 0xc8, 0xc4, 0x20, 0x90, 0x94, 0x51, 0x16, 0x17, 0x87, 0x33,
-	0x54, 0x54, 0x48, 0x97, 0x8b, 0xd9, 0x31, 0x25, 0x45, 0x48, 0x10, 0xa1, 0x0e, 0x6a, 0x8e, 0x14,
-	0xa6, 0x90, 0x12, 0x83, 0x90, 0x3e, 0x17, 0x6b, 0x70, 0x4e, 0x6a, 0x6a, 0x01, 0xb1, 0x1a, 0x92,
-	0xd8, 0xc0, 0x7e, 0x33, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x10, 0x7b, 0x5d, 0x1b, 0xed, 0x00,
-	0x00, 0x00,
+	0xdb, 0x88, 0x4f, 0x0f, 0x6e, 0x09, 0xc8, 0xc4, 0x20, 0x90, 0x94, 0xd1, 0x6c, 0x46, 0x2e, 0x0e,
+	0x67, 0xa8, 0xb0, 0x90, 0x2e, 0x17, 0xb3, 0x63, 0x4a, 0x8a, 0x90, 0x20, 0x42, 0x21, 0xd4, 0x20,
+	0x29, 0x4c, 0x21, 0x25, 0x06, 0x21, 0x7d, 0x2e, 0xd6, 0xe0, 0x9c, 0xd4, 0xd4, 0x02, 0x52, 0x34,
+	0xb8, 0x16, 0x15, 0xe5, 0x17, 0x11, 0xab, 0x21, 0x89, 0x0d, 0x1c, 0x1a, 0xc6, 0x80, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x3a, 0x64, 0x76, 0xb2, 0x1f, 0x01, 0x00, 0x00,
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 
@@ -37,11 +36,9 @@ func Dial(m Message) Message {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	reply, error := CallCommand(c, ctx, m)
-	if error != nil {
-		return NewRespondMessage(m, &commands.Message{Msg: [](*commands.Data){&commands.Data{Name: "unknown command", Value: -1}}})
-	}
-	return NewRespondMessage(m, reply)
+	reply, _ := CallCommand(c, ctx, m)
+	m.Results = NewRespondMessage(reply)
+	return m
 }
 
 func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*commands.Message, error) {
@@ -52,22 +49,20 @@ func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*co
 	req := NewCommandMessage(m)
 	cmd, found := cmdsMap[m.Command]
 	if !found {
-		return nil, errors.New("commands: unknown command")
+		return c.Error(ctx, &req)
 	}
 	return cmd(c, ctx, &req)
 }
 
-func NewRespondMessage(m Message, reply *commands.Message) Message {
-	var respond Message
-	respond.Command = m.Command
-	respond.Args = m.Args
-	for _, element := range reply.Msg {
+func NewRespondMessage(r *commands.Message) []Data {
+	var args []Data
+	for _, element := range r.Msg {
 		var n Data
 		n.Name = element.Name
 		n.Value = element.Value
-		respond.Results = append(respond.Results, n)
+		args = append(args, n)
 	}
-	return respond
+	return args
 }
 
 func NewCommandMessage(m Message) commands.Message {
