@@ -15,6 +15,14 @@
 			"command": "Add",
 			"args": [{
 					"name": "op1",
+					"value": 1
+				}
+			]
+		},
+		{
+			"command": "Add",
+			"args": [{
+					"name": "op1",
 					"value": 42
 				},
 				{
@@ -29,6 +37,24 @@
 				"name": "duration",
 				"value": 10000
 			}]
+		},
+		{
+			"command": "Sleep",
+			"args": [{
+				"name": "dur",
+				"value": 10000
+			}]
+		},
+		{
+			"command": "Sleep",
+			"args": [{
+				"name": "duration",
+				"value": 5000
+			}]
+		},
+		{
+			"command": "Foobar",
+			"args": []
 		}
 	]
 }

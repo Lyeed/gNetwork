@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	cmds "github.com/Lyeed/gNetwork/commands"
@@ -13,19 +14,38 @@ import (
 
 const port = ":50051"
 
-type server struct{}
+type serverCommands struct{}
 
-func (s *server) Add(ctx context.Context, in *cmds.Request) (*cmds.Reply, error) {
-	total := in.Value[0] + in.Value[1]
-	log.Printf("%d + %d = %d", in.Value[0], in.Value[1], total)
-	return &cmds.Reply{Msg: [](*cmds.Data){&cmds.Data{Name: "sum", Value: total}}}, nil
+func getParam(d []*cmds.Data, name string) *cmds.Data {
+	for _, element := range d {
+		if strings.Compare(element.Name, name) == 0 {
+			return element
+		}
+	}
+	return nil
 }
 
-func (s *server) Sleep(ctx context.Context, in *cmds.Request) (*cmds.Reply, error) {
-	log.Printf("Sleep %d", in.Value[0])
-	time.Sleep(time.Duration(in.Value[0]) * time.Millisecond)
-	log.Printf("Sleep done")
-	return &cmds.Reply{Msg: [](*cmds.Data){&cmds.Data{Name: "actual_duration", Value: in.Value[0]}}}, nil
+func NewReply(name string, value int64) *cmds.Reply {
+	return &cmds.Reply{Msg: [](*cmds.Data){&cmds.Data{Name: name, Value: value}}}
+}
+
+func (s *serverCommands) Add(ctx context.Context, in *cmds.Request) (*cmds.Reply, error) {
+	ope1 := getParam(in.Msg, "op1")
+	ope2 := getParam(in.Msg, "op2")
+	if ope1 == nil || ope2 == nil {
+		return NewReply("wrong syntax", -1), nil
+	}
+	return NewReply("sum", ope1.Value+ope2.Value), nil
+}
+
+func (s *serverCommands) Sleep(ctx context.Context, in *cmds.Request) (*cmds.Reply, error) {
+	dur := getParam(in.Msg, "duration")
+	if dur == nil {
+		return NewReply("wrong syntax", -1), nil
+	}
+	start := time.Now()
+	time.Sleep(time.Duration(dur.Value) * time.Millisecond)
+	return NewReply("actual_duration", int64(time.Since(start)/time.Millisecond)), nil
 }
 
 func main() {
@@ -34,7 +54,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	cmds.RegisterCommandsServer(s, &server{})
+	cmds.RegisterCommandsServer(s, &serverCommands{})
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

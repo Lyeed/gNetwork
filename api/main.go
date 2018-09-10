@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -17,7 +18,7 @@ type Argument struct {
 
 type Result struct {
 	Name  string
-	Value int
+	Value int64
 }
 
 type Message struct {
@@ -33,44 +34,69 @@ type Respond struct {
 
 const address = "localhost:50051"
 
+type command func(cmds.CommandsClient, context.Context, *cmds.Request, ...grpc.CallOption) (*cmds.Reply, error)
+
 func Dial(m Message) Respond {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("dial error: %v", err)
 	}
 	defer conn.Close()
-	c := cmds.NewCommandsClient(conn)
 
-	// Contact the server and print out its response.
+	c := cmds.NewCommandsClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var result *cmds.Reply
-	switch m.Command {
-	case "Add":
-		{
-			result, err = c.Add(ctx, &cmds.Request{Value: []int64{int64(m.Args[0].Value), int64(m.Args[1].Value)}})
-		}
-	case "Sleep":
-		{
-			result, err = c.Sleep(ctx, &cmds.Request{Value: []int64{int64(m.Args[0].Value)}})
-		}
+	reply, error := CallCommand(c, ctx, m)
+	if error != nil {
+		return StructureRespond(m, &cmds.Reply{Msg: [](*cmds.Data){&cmds.Data{Name: "unknown command", Value: -1}}})
 	}
+	return StructureRespond(m, reply)
+}
 
-	if err != nil {
-		log.Fatalf("Err: %v", err)
+func CallCommand(c cmds.CommandsClient, ctx context.Context, m Message) (*cmds.Reply, error) {
+	cmdsMap := map[string]command{
+		"Add":   cmds.CommandsClient.Add,
+		"Sleep": cmds.CommandsClient.Sleep,
 	}
+	req := NewRequest(m)
+	cmd, found := cmdsMap[m.Command]
+	if !found {
+		return nil, errors.New("commands: unknown command")
+	}
+	return cmd(c, ctx, &req)
+}
 
-	log.Printf("Command executed : %s", m.Command)
+func StructureRespond(m Message, reply *cmds.Reply) Respond {
+	var respond Respond
+	respond.Command = m.Command
+	respond.Args = m.Args
+	for _, element := range reply.Msg {
+		var n Result
+		n.Name = element.Name
+		n.Value = element.Value
+		respond.Results = append(respond.Results, n)
+	}
+	return respond
+}
 
-	return Respond{Command: m.Command, Args: m.Args, Results: []Result{Result{Name: result.Msg[0].Name, Value: int(result.Msg[0].Value)}}}
+func NewRequest(m Message) cmds.Request {
+	var r cmds.Request
+	for _, element := range m.Args {
+		var d cmds.Data
+		d.Name = element.Name
+		d.Value = int64(element.Value)
+		r.Msg = append(r.Msg, &d)
+	}
+	return r
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
-		http.Error(w, "Please send a request body", 400)
+		http.Error(w, "Request body needed", 400)
 		return
 	}
+
 	var m Message
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
@@ -78,7 +104,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Command received: %s | Args count: %d", m.Command, len(m.Args))
 	result := Dial(m)
 	js, err := json.Marshal(result)
 	if err != nil {

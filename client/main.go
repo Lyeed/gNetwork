@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -37,24 +36,28 @@ func OpenAndUnmarshallJSON(s string) *Commands {
 	return cmds
 }
 
-func PostCommand(c Command) {
+func PostCommand(c Command) *http.Response {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(c)
-	fmt.Printf("\n\nSending message to %s. Command: %s\n", address, c.Command)
 	res, err := http.Post(address, "application/json; charset=utf-8", b)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	io.Copy(os.Stdout, res.Body)
+	return res
 }
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalf("1st parameter should be a json file")
+		log.Fatalf("1st parameter must be a json file")
 	}
 
 	cmds := OpenAndUnmarshallJSON(os.Args[1])
 	for i := 0; i < len(cmds.Commands); i++ {
-		PostCommand(cmds.Commands[i])
+		fmt.Printf("\n\n%+v\n", cmds.Commands[i])
+		r := PostCommand(cmds.Commands[i])
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r.Body)
+		newStr := buf.String()
+		fmt.Printf("%s\n", newStr)
 	}
 }
