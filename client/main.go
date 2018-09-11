@@ -39,14 +39,14 @@ func OpenAndUnmarshallJSON(s string) *Commands {
 func PostCommand(c Command) (*http.Response, error) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(c)
-	return http.Post(address, "application/json; charset=utf-8", b)
+	return http.Post(address, "application/json", b)
 }
 
 func main() {
 	if len(os.Args) >= 2 {
 		cmds := OpenAndUnmarshallJSON(os.Args[1])
 		for i := 0; i < len(cmds.Commands); i++ {
-			fmt.Printf("\n\nCommand: %+v\n", cmds.Commands[i]) // printing the initial structure and its content
+			fmt.Printf("Command: %+v\n", cmds.Commands[i]) // printing the initial structure and its content
 
 			r, err := PostCommand(cmds.Commands[i])
 			// the variable r contains the command's response
@@ -58,10 +58,10 @@ func main() {
 				buf.ReadFrom(r.Body)
 				newStr := buf.String()
 				fmt.Printf("Response type: %s\n", r.Header.Get("Content-type")) // printing content type
-				fmt.Printf("Response content: %s\n", newStr)                    // printing as string the json returned
+				fmt.Printf("Response content: %s\n\n", newStr)                  // printing as string the json returned
 				r.Body.Close()
 			} else {
-				fmt.Printf("%s\n", err.Error()) // printing Post error
+				fmt.Printf("%s\n\n", err.Error()) // printing Post error
 			}
 		}
 	} else {

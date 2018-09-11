@@ -3,12 +3,17 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Lyeed/gNetwork/commands"
 	"google.golang.org/grpc"
 )
+
+const address = "localhost:50051"
+const port = ":8080"
 
 type Data struct {
 	Name  string
@@ -21,51 +26,7 @@ type Message struct {
 	Results []Data
 }
 
-const address = "localhost:50051"
-
-type command func(commands.CommandsClient, context.Context, *commands.Message, ...grpc.CallOption) (*commands.Message, error)
-
-func Dial(m Message) Message {
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("dial error: %v", err)
-	}
-	defer conn.Close()
-
-	c := commands.NewCommandsClient(conn)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	reply, _ := CallCommand(c, ctx, m)
-	m.Results = NewRespondMessage(reply)
-	return m
-}
-
-func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*commands.Message, error) {
-	cmdsMap := map[string]command{
-		"Add":   commands.CommandsClient.Add,
-		"Sleep": commands.CommandsClient.Sleep,
-	}
-	req := NewCommandMessage(m)
-	cmd, found := cmdsMap[m.Command]
-	if !found {
-		return c.Error(ctx, &req)
-	}
-	return cmd(c, ctx, &req)
-}
-
-func NewRespondMessage(r *commands.Message) []Data {
-	var args []Data
-	for _, element := range r.Msg {
-		var n Data
-		n.Name = element.Name
-		n.Value = element.Value
-		args = append(args, n)
-	}
-	return args
-}
-
-func NewCommandMessage(m Message) commands.Message {
+func (m Message) NewCommandMessage() *commands.Message {
 	var r commands.Message
 	for _, element := range m.Args {
 		var d commands.Data
@@ -73,12 +34,40 @@ func NewCommandMessage(m Message) commands.Message {
 		d.Value = element.Value
 		r.Msg = append(r.Msg, &d)
 	}
-	return r
+	return &r
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func (m *Message) SetResults(r *commands.Message) {
+	for _, element := range r.Msg {
+		var n Data
+		n.Name = element.Name
+		n.Value = element.Value
+		m.Results = append(m.Results, n)
+	}
+}
+
+type command func(commands.CommandsClient, context.Context, *commands.Message, ...grpc.CallOption) (*commands.Message, error)
+
+func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*commands.Message, error) {
+	cmdsMap := map[string]command{
+		"Add":   commands.CommandsClient.Add,
+		"Sleep": commands.CommandsClient.Sleep,
+	}
+	cmd, found := cmdsMap[m.Command]
+	if !found {
+		return c.Error(ctx, m.NewCommandMessage())
+	}
+	return cmd(c, ctx, m.NewCommandMessage())
+}
+
+func Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		http.Error(w, "Request body needed", http.StatusBadRequest)
+		return
+	}
+
+	if strings.Compare(r.Header.Get("Content-type"), "application/json") != 0 {
+		http.Error(w, "HTTP Content-Type must be application/json", http.StatusBadRequest)
 		return
 	}
 
@@ -89,8 +78,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := Dial(m)
-	js, err := json.Marshal(result)
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer conn.Close()
+
+	c := commands.NewCommandsClient(conn)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	reply, _ := CallCommand(c, ctx, m)
+	m.SetResults(reply)
+
+	js, err := json.Marshal(m)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -101,6 +103,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/command", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/command", Handler)
+	log.Fatal(http.ListenAndServe(port, nil))
 }
