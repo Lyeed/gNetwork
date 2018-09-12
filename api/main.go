@@ -8,73 +8,47 @@ import (
 	"net/http"
 	"strings"
 
+	msg "github.com/Lyeed/gNetwork/api/message"
 	"github.com/Lyeed/gNetwork/commands"
 	"google.golang.org/grpc"
 )
 
-const address = "localhost:50051"
-const port = ":8080"
+const address = "localhost:50051" // commands service address and port
+const port = ":8080"              // API listen port
 
-type Data struct {
-	Name  string
-	Value int64
-}
+type commandCalls func(commands.CommandsClient, context.Context, *commands.Message, ...grpc.CallOption) (*commands.Message, error)
 
-type Message struct {
-	Command string
-	Args    []Data
-	Results []Data
-}
-
-func (m Message) NewCommandMessage() *commands.Message {
-	var r commands.Message
-	for _, element := range m.Args {
-		var d commands.Data
-		d.Name = element.Name
-		d.Value = element.Value
-		r.Msg = append(r.Msg, &d)
-	}
-	return &r
-}
-
-func (m *Message) SetResults(r *commands.Message) {
-	for _, element := range r.Msg {
-		var n Data
-		n.Name = element.Name
-		n.Value = element.Value
-		m.Results = append(m.Results, n)
-	}
-}
-
-type command func(commands.CommandsClient, context.Context, *commands.Message, ...grpc.CallOption) (*commands.Message, error)
-
-func CallCommand(c commands.CommandsClient, ctx context.Context, m Message) (*commands.Message, error) {
-	cmdsMap := map[string]command{
+// CallCommand: Searches the command in the map and execute it
+// Calls Error in case the command called does not exist
+// Return the command response
+func CallCommand(ctx context.Context, cmds commands.CommandsClient, msg msg.IMessage) (*commands.Message, error) {
+	cmdsMap := map[string]commandCalls{
 		"Add":   commands.CommandsClient.Add,
 		"Sleep": commands.CommandsClient.Sleep,
 	}
-	cmd, found := cmdsMap[m.Command]
+	cmd, found := cmdsMap[msg.GetCommand()]
 	if !found {
-		return c.Error(ctx, m.NewCommandMessage())
+		return cmds.Error(ctx, msg.NewCommandMessage())
 	}
-	return cmd(c, ctx, m.NewCommandMessage())
+	return cmd(cmds, ctx, msg.NewCommandMessage())
 }
 
-func Handler(w http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		http.Error(w, "Request body needed", http.StatusBadRequest)
+// Handler: Handle the client request
+// Checks the request, execute its command and send the response to the client
+func Handler(writer http.ResponseWriter, req *http.Request) {
+	if req.Body == nil {
+		http.Error(writer, "Request body needed", http.StatusBadRequest)
 		return
 	}
 
-	if strings.Compare(r.Header.Get("Content-type"), "application/json") != 0 {
-		http.Error(w, "HTTP Content-Type must be application/json", http.StatusBadRequest)
+	if strings.Compare(req.Header.Get("Content-type"), "application/json") != 0 {
+		http.Error(writer, "HTTP Content-Type must be application/json", http.StatusBadRequest)
 		return
 	}
 
-	var m Message
-	err := json.NewDecoder(r.Body).Decode(&m)
+	mess, err := msg.NewMessage(req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -85,21 +59,21 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	c := commands.NewCommandsClient(conn)
+	cmdClient := commands.NewCommandsClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	reply, _ := CallCommand(c, ctx, m)
-	m.SetResults(reply)
+	reply, _ := CallCommand(ctx, cmdClient, mess)
+	mess.SetResults(reply)
 
-	js, err := json.Marshal(m)
+	js, err := json.Marshal(mess)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(js)
 }
 
 func main() {

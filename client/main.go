@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const address = "http://localhost:8080/command"
+const address = "http://localhost:8080/command" // API address and route
 
 type Arg struct {
 	Name  string `json:"name"`
@@ -24,8 +24,9 @@ type Commands struct {
 	Commands []Command `json:"commands"`
 }
 
-func OpenAndUnmarshallJSON(s string) *Commands {
-	file, err := os.Open(s)
+// OpenAndUnmarshallJSON: Open the Json file and unmarshall its content
+func OpenAndUnmarshallJSON(str string) *Commands {
+	file, err := os.Open(str)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -36,10 +37,11 @@ func OpenAndUnmarshallJSON(s string) *Commands {
 	return cmds
 }
 
-func PostCommand(c Command) (*http.Response, error) {
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(c)
-	return http.Post(address, "application/json", b)
+// PostCommand: Sends the command as json to the API
+func PostCommand(cmd Command) (*http.Response, error) {
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(cmd)
+	return http.Post(address, "application/json", buffer)
 }
 
 func main() {
@@ -48,18 +50,18 @@ func main() {
 		for i := 0; i < len(cmds.Commands); i++ {
 			fmt.Printf("Command: %+v\n", cmds.Commands[i]) // printing the initial structure and its content
 
-			r, err := PostCommand(cmds.Commands[i])
-			// the variable r contains the command's response
+			response, err := PostCommand(cmds.Commands[i])
+			// the variable response contains the command's response
 			// the json is contained in the response's body accessible via r.Body
 
 			// Example using command's response
 			if err == nil {
-				buf := new(bytes.Buffer)
-				buf.ReadFrom(r.Body)
-				newStr := buf.String()
-				fmt.Printf("Response type: %s\n", r.Header.Get("Content-type")) // printing content type
-				fmt.Printf("Response content: %s\n\n", newStr)                  // printing as string the json returned
-				r.Body.Close()
+				buffer := new(bytes.Buffer)
+				buffer.ReadFrom(response.Body)
+				str := buffer.String()
+				fmt.Printf("Response type: %s\n", response.Header.Get("Content-type")) // printing content type
+				fmt.Printf("Response content: %s\n\n", str)                            // printing as string the json returned
+				response.Body.Close()
 			} else {
 				fmt.Printf("%s\n\n", err.Error()) // printing Post error
 			}

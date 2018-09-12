@@ -3,19 +3,21 @@ package main_test
 import (
 	"fmt"
 
-	api "github.com/Lyeed/gNetwork/api"
+	msg "github.com/Lyeed/gNetwork/api/message"
 	cmds "github.com/Lyeed/gNetwork/commands"
 )
 
+// ExampleNewCommandMessage: Generates a command message for the Add function
 func ExampleNewCommandMessage() {
-	m := api.Message{Command: "Add", Args: []api.Data{api.Data{Name: "op1", Value: 1}, api.Data{Name: "op2", Value: 1}}}
+	m := msg.Message{Command: "Add", Args: []msg.Data{msg.Data{Name: "op1", Value: 1}, msg.Data{Name: "op2", Value: 1}}}
 	c := m.NewCommandMessage()
 	fmt.Printf("%+v\n", c)
 	// Output: Msg:<Name:"op1" Value:1 > Msg:<Name:"op2" Value:1 >
 }
 
+// ExampleSetResults: Sets the sum of the Add function to the message structure
 func ExampleSetResults() {
-	m := api.Message{Command: "Add", Args: []api.Data{api.Data{Name: "op1", Value: 1}, api.Data{Name: "op2", Value: 1}}}
+	m := msg.Message{Command: "Add", Args: []msg.Data{msg.Data{Name: "op1", Value: 1}, msg.Data{Name: "op2", Value: 1}}}
 	r := cmds.Message{Msg: [](*cmds.Data){&cmds.Data{Name: "sum", Value: 2}}}
 	m.SetResults(&r)
 	fmt.Printf("%+v\n", m)
