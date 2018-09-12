@@ -20,7 +20,7 @@ type commandCalls func(commands.CommandsClient, context.Context, *commands.Messa
 
 // CallCommand: Searches the command in the map and execute it
 // Calls Error in case the command called does not exist
-// Return the command response
+// Returns the command response
 func CallCommand(ctx context.Context, cmds commands.CommandsClient, msg msg.IMessage) (*commands.Message, error) {
 	cmdsMap := map[string]commandCalls{
 		"Add":   commands.CommandsClient.Add,
@@ -51,6 +51,7 @@ func Handler(writer http.ResponseWriter, req *http.Request) {
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
+	log.Printf("Message: %+v\n", mess)
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -65,6 +66,8 @@ func Handler(writer http.ResponseWriter, req *http.Request) {
 
 	reply, _ := CallCommand(ctx, cmdClient, mess)
 	mess.SetResults(reply)
+	log.Printf("Command response: %+v\n", mess.GetResults())
+	log.Printf("API response: %+v\n\n", mess)
 
 	js, err := json.Marshal(mess)
 	if err != nil {

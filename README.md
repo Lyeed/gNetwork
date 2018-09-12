@@ -3,5 +3,5 @@
 ## Download
 `go get github.com/Lyeed/gNetwork/...`
 
-## Run Example
-`go run ./client/main.go ./commands.json`
+## Run test file
+`go run ./gNetwork/client/main.go ./gNetwork/commands.json`

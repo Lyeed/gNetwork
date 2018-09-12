@@ -45,14 +45,14 @@ func PostCommand(cmd Command) (*http.Response, error) {
 }
 
 func main() {
-	if len(os.Args) >= 2 {
+	if len(os.Args) > 1 {
 		cmds := OpenAndUnmarshallJSON(os.Args[1])
 		for i := 0; i < len(cmds.Commands); i++ {
 			fmt.Printf("Command: %+v\n", cmds.Commands[i]) // printing the initial structure and its content
 
 			response, err := PostCommand(cmds.Commands[i])
 			// the variable response contains the command's response
-			// the json is contained in the response's body accessible via r.Body
+			// the json is contained in the response's body accessible via response.Body
 
 			// Example using command's response
 			if err == nil {

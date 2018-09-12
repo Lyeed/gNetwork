@@ -1,4 +1,4 @@
-package main_test
+package serverCommands_test
 
 import (
 	"fmt"

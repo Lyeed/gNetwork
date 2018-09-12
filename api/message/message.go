@@ -27,8 +27,9 @@ func NewMessage(req *http.Request) (IMessage, error) {
 
 type IMessage interface {
 	GetCommand() string
-	NewCommandMessage() *commands.Message
+	GetResults() []Data
 	SetResults(*commands.Message)
+	NewCommandMessage() *commands.Message
 }
 
 // NewCommandMessage: Create and return a new message structured according to the commands server's need
@@ -55,4 +56,7 @@ func (msg *Message) SetResults(response *commands.Message) {
 
 func (msg *Message) GetCommand() string {
 	return msg.Command
+}
+func (msg *Message) GetResults() []Data {
+	return msg.Results
 }
